@@ -51,6 +51,9 @@ class MockOtpRepositoryImpl implements OtpRepository {
     // Simulate network delay
     await Future.delayed(const Duration(milliseconds: 500));
     
+    // Default OTP 123456 for testing (grad demo)
+    if (code == '123456') return true;
+
     final storedCode = _otpCache[destination];
     return storedCode != null && storedCode == code;
   }

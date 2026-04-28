@@ -130,6 +130,9 @@ class _BillPaymentsScreenState extends State<BillPaymentsScreen> {
       case 'tv': return Icons.tv;
       case 'smartphone': return Icons.smartphone;
       case 'sim_card': return Icons.sim_card;
+      case 'school': return Icons.school;
+      case 'medical_services': return Icons.medical_services;
+      case 'security': return Icons.security;
       default: return Icons.payment;
     }
   }

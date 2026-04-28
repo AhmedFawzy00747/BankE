@@ -15,16 +15,41 @@ class MockAccountRepository implements AccountRepository {
   }
 
   @override
-  Future<AccountEntity> getAccountDetails(String accountId) async => throw UnimplementedError();
+  Future<AccountEntity> getAccountDetails(String accountId) async =>
+      throw UnimplementedError();
 
   @override
-  Future<void> performTransfer({required String senderId, required String recipientAccount, required double amount, required String notes}) async {}
+  Future<List<AccountEntity>> getUserAccounts(String userId) async =>
+      throw UnimplementedError();
 
   @override
-  Future<void> payBill({required String senderId, required String billerId, required String consumerId, required double amount}) async {}
+  Future<void> performTransfer(
+      {required String senderId,
+      required String recipientAccount,
+      required double amount,
+      required String notes}) async {}
+
+  @override
+  Future<void> payBill(
+      {required String senderId,
+      required String billerId,
+      required String consumerId,
+      required double amount}) async {}
 
   @override
   Future<List<BillerEntity>> getBillers() async => throw UnimplementedError();
+
+  @override
+  Future<void> deposit(String accountId, double amount) {
+    // TODO: implement deposit
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> withdraw(String accountId, double amount) {
+    // TODO: implement withdraw
+    throw UnimplementedError();
+  }
 }
 
 void main() {
@@ -35,7 +60,8 @@ void main() {
   setUp(() {
     mockRepository = MockAccountRepository();
     mockLocationService = MockLocationServiceImpl();
-    detectFraudUseCase = DetectFraudUseCase(mockRepository, mockLocationService);
+    detectFraudUseCase =
+        DetectFraudUseCase(mockRepository, mockLocationService);
   });
 
   test('Should throw FraudException for large transaction', () async {
@@ -48,9 +74,24 @@ void main() {
   test('Should throw FraudException for rapid transactions', () async {
     final now = DateTime.now();
     mockRepository.mockedTransactions = [
-      TransactionEntity(id: '1', amount: 10, date: now.subtract(const Duration(minutes: 1)), description: '1', isCredit: false),
-      TransactionEntity(id: '2', amount: 10, date: now.subtract(const Duration(minutes: 2)), description: '2', isCredit: false),
-      TransactionEntity(id: '3', amount: 10, date: now.subtract(const Duration(minutes: 3)), description: '3', isCredit: false),
+      TransactionEntity(
+          id: '1',
+          amount: 10,
+          date: now.subtract(const Duration(minutes: 1)),
+          description: '1',
+          isCredit: false),
+      TransactionEntity(
+          id: '2',
+          amount: 10,
+          date: now.subtract(const Duration(minutes: 2)),
+          description: '2',
+          isCredit: false),
+      TransactionEntity(
+          id: '3',
+          amount: 10,
+          date: now.subtract(const Duration(minutes: 3)),
+          description: '3',
+          isCredit: false),
     ];
 
     expect(
@@ -59,7 +100,8 @@ void main() {
     );
   });
 
-  test('Should throw FraudException for location anomaly using geofencing', () async {
+  test('Should throw FraudException for location anomaly using geofencing',
+      () async {
     // Override mock location to somewhere far (London coordinates)
     await mockLocationService.setMockLocation(51.5072, -0.1276);
 
@@ -69,7 +111,8 @@ void main() {
     );
   });
 
-  test('Should not throw exception for valid transaction inside trusted zone', () async {
+  test('Should not throw exception for valid transaction inside trusted zone',
+      () async {
     // Using default mock location (New York)
     await detectFraudUseCase.execute(accountId: 'acc1', amount: 50);
     expect(true, isTrue); // Reaches here without throwing

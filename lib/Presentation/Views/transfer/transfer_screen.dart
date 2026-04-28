@@ -219,7 +219,7 @@ class _TransferScreenState extends State<TransferScreen> {
                           radius: 30,
                           backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
                           child: Text(
-                            name[0].toUpperCase(),
+                            name.isNotEmpty ? name[0].toUpperCase() : '?',
                             style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold),
                           ),
                         ),

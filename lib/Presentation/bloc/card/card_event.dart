@@ -31,3 +31,26 @@ class DeleteCardEvent extends CardEvent {
 
   const DeleteCardEvent(this.cardId, this.accountId);
 }
+
+class UpdateCardLimitEvent extends CardEvent {
+  final String cardId;
+  final double newLimit;
+  final String accountId;
+
+  const UpdateCardLimitEvent(this.cardId, this.newLimit, this.accountId);
+}
+
+class ChangeCardPinEvent extends CardEvent {
+  final String cardId;
+  final String newPin;
+  final String accountId;
+
+  const ChangeCardPinEvent(this.cardId, this.newPin, this.accountId);
+}
+
+class GenerateVirtualCardEvent extends CardEvent {
+  final String accountId;
+  final String cardHolderName;
+
+  const GenerateVirtualCardEvent(this.accountId, this.cardHolderName);
+}

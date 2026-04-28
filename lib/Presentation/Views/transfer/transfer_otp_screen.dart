@@ -7,6 +7,7 @@ import '../../bloc/transfer_event.dart';
 import '../../bloc/transfer_state.dart';
 import '../../bloc/account_bloc.dart';
 import '../../bloc/account_event.dart';
+import '../../bloc/account_state.dart';
 import '../../bloc/transaction_bloc.dart';
 import '../../bloc/transaction_event.dart';
 import '../../bloc/otp/otp_bloc.dart';
@@ -63,10 +64,13 @@ class _TransferOtpScreenState extends State<TransferOtpScreen> {
   }
 
   void _executeTransfer() {
+    final accountState = context.read<AccountBloc>().state;
+    final senderId = (accountState is AccountLoaded) ? accountState.account.id : AppConstants.currentAccountId;
+
     if (widget.billerId != null) {
       context.read<TransferBloc>().add(
         PayBillEvent(
-          accountId: AppConstants.currentAccountId,
+          accountId: senderId,
           billerId: widget.billerId!,
           consumerId: widget.consumerId ?? '',
           amount: double.tryParse(widget.amount) ?? 0.0,
@@ -75,7 +79,7 @@ class _TransferOtpScreenState extends State<TransferOtpScreen> {
     } else {
       context.read<TransferBloc>().add(
         InitiateTransfer(
-          accountId: AppConstants.currentAccountId,
+          accountId: senderId,
           recipientAccount: widget.account,
           amount: double.tryParse(widget.amount) ?? 0.0,
           notes: widget.notes,
@@ -109,6 +113,7 @@ class _TransferOtpScreenState extends State<TransferOtpScreen> {
                   builder: (context) => TransferSuccessScreen(
                     amount: state.amount.toStringAsFixed(2),
                     recipient: state.recipientAccount,
+                    isBill: widget.billerId != null,
                   ),
                 ),
               );

@@ -1,24 +1,18 @@
-enum LoanStatus { pending, approved, rejected }
+import '../../domain/entities/loan_entity.dart';
 
-class LoanModel {
-  final String id;
-  final String userId;
-  final String userName;
-  final double amount;
-  final String purpose;
-  final int durationMonths;
-  final String pdfFileName;
-  final LoanStatus status;
+export '../../domain/entities/loan_entity.dart' show LoanStatus;
 
+class LoanModel extends LoanEntity {
   const LoanModel({
-    required this.id,
-    required this.userId,
-    required this.userName,
-    required this.amount,
-    required this.purpose,
-    required this.durationMonths,
-    required this.pdfFileName,
-    this.status = LoanStatus.pending,
+    required super.id,
+    required super.userId,
+    required super.userName,
+    required super.amount,
+    required super.purpose,
+    required super.durationMonths,
+    required super.pdfFileName,
+    super.pdfFilePath,
+    super.status = LoanStatus.pending,
   });
 
   LoanModel copyWith({LoanStatus? status}) {
@@ -30,6 +24,7 @@ class LoanModel {
       purpose: purpose,
       durationMonths: durationMonths,
       pdfFileName: pdfFileName,
+      pdfFilePath: pdfFilePath,
       status: status ?? this.status,
     );
   }

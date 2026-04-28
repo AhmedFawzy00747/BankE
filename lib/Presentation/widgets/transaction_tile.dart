@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/currency/currency_bloc.dart';
 import '../../domain/entities/transaction.dart';
+import '../Views/transactions/transaction_details_screen.dart';
 
 class TransactionTile extends StatelessWidget {
   final TransactionEntity transaction;
@@ -22,7 +25,14 @@ class TransactionTile extends StatelessWidget {
         border: Border.all(color: theme.dividerColor.withOpacity(0.05)),
       ),
       child: ListTile(
-        onTap: onTap,
+        onTap: onTap ?? () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => TransactionDetailsScreen(transaction: transaction),
+            ),
+          );
+        },
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         leading: Container(
           width: 48,
@@ -51,13 +61,17 @@ class TransactionTile extends StatelessWidget {
           '${transaction.date.day}/${transaction.date.month}/${transaction.date.year}',
           style: const TextStyle(fontSize: 12, color: Colors.grey),
         ),
-        trailing: Text(
-          '${transaction.isCredit ? '+' : '-'}\$${transaction.amount.toStringAsFixed(2)}',
-          style: TextStyle(
-            color: transaction.isCredit ? Colors.green : Colors.red,
-            fontWeight: FontWeight.w900,
-            fontSize: 15,
-          ),
+        trailing: BlocBuilder<CurrencyBloc, CurrencyState>(
+          builder: (context, state) {
+            return Text(
+              '${transaction.isCredit ? '+' : '-'}${state.format(transaction.amount)}',
+              style: TextStyle(
+                color: transaction.isCredit ? Colors.green : Colors.red,
+                fontWeight: FontWeight.w900,
+                fontSize: 15,
+              ),
+            );
+          },
         ),
       ),
     );

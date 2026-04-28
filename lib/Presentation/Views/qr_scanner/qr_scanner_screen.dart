@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../transfer/transfer_screen.dart';
+import 'my_qr_screen.dart';
 import 'dart:async';
 
 class QrScannerScreen extends StatefulWidget {
@@ -83,31 +84,26 @@ class _QrScannerScreenState extends State<QrScannerScreen> with SingleTickerProv
     final List<Barcode> barcodes = capture.barcodes;
     if (barcodes.isNotEmpty && barcodes.first.rawValue != null) {
       final String result = barcodes.first.rawValue!;
-      _isProcessing = true;
-      _scannerController.stop(); // Stop scanning once valid code found
       
-      // Premium Haptic Feedback
-      HapticFeedback.vibrate();
+      // Fintech protocol: data is either account_number or user_id|account_number
+      String accountToPay = result;
+      if (result.contains('|')) {
+        accountToPay = result.split('|').last;
+      }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Account Detected Successfully'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 1),
-        ),
-      );
+      _isProcessing = true;
+      _scannerController.stop(); 
+      
+      HapticFeedback.heavyImpact();
 
-      // Add a slight delay for better UX
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TransferScreen(recipientAccount: result),
-            ),
-          );
-        }
-      });
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TransferScreen(recipientAccount: accountToPay),
+          ),
+        );
+      }
     }
   }
 
@@ -291,7 +287,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> with SingleTickerProv
                       ),
                     ),
                     const SizedBox(width: 60),
-                    _premiumActionBtn(Icons.qr_code_rounded, 'My QR'),
+                    GestureDetector(
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MyQrScreen())),
+                      child: _premiumActionBtn(Icons.qr_code_rounded, 'My QR'),
+                    ),
                   ],
                 ),
               ],

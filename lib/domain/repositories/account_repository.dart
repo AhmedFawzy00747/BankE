@@ -4,6 +4,7 @@ import '../entities/biller.dart';
 
 abstract class AccountRepository {
   Future<AccountEntity> getAccountDetails(String accountId);
+  Future<List<AccountEntity>> getUserAccounts(String userId);
   Future<List<TransactionEntity>> getTransactions(String accountId);
   Future<void> performTransfer({
     required String senderId,
@@ -18,4 +19,6 @@ abstract class AccountRepository {
     required double amount,
   });
   Future<List<BillerEntity>> getBillers();
+  Future<void> withdraw(String accountId, double amount);
+  Future<void> deposit(String accountId, double amount);
 }

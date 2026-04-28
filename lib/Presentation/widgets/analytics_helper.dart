@@ -95,4 +95,73 @@ class AnalyticsHelper {
 
     return monthlyTotals;
   }
+
+  static List<String> generateInsights(List<TransactionEntity> transactions) {
+    List<String> insights = [];
+    final now = DateTime.now();
+
+    // 1. Weekly comparison insight
+    final startOfThisWeek = now.subtract(Duration(days: now.weekday - 1));
+    final startOfLastWeek = startOfThisWeek.subtract(const Duration(days: 7));
+    
+    double thisWeekSpending = 0;
+    double lastWeekSpending = 0;
+
+    for (var tx in transactions.where((t) => !t.isCredit)) {
+      if (tx.date.isAfter(startOfThisWeek.subtract(const Duration(seconds: 1)))) {
+        thisWeekSpending += tx.amount;
+      } else if (tx.date.isAfter(startOfLastWeek.subtract(const Duration(seconds: 1))) && 
+                 tx.date.isBefore(startOfThisWeek)) {
+        lastWeekSpending += tx.amount;
+      }
+    }
+
+    if (lastWeekSpending > 0) {
+      final diff = thisWeekSpending - lastWeekSpending;
+      final percentage = (diff.abs() / lastWeekSpending) * 100;
+      if (diff > 0) {
+        insights.add('You spent ${percentage.toStringAsFixed(1)}% more this week compared to last week.');
+      } else if (diff < 0) {
+        insights.add('Great job! You spent ${percentage.toStringAsFixed(1)}% less this week.');
+      }
+    } else if (thisWeekSpending > 0 && lastWeekSpending == 0) {
+      insights.add('You spent \$${thisWeekSpending.toStringAsFixed(2)} this week.');
+    }
+
+    // 2. Top category insight
+    final categoryTotals = getExpensesByCategory(transactions);
+    double maxSpending = 0;
+    SpendingCategory? topCategory;
+    
+    categoryTotals.forEach((cat, amount) {
+      if (amount > maxSpending) {
+        maxSpending = amount;
+        topCategory = cat;
+      }
+    });
+
+    if (topCategory != null && maxSpending > 0) {
+      insights.add('Your highest spending is on ${topCategory!.name} (\$${maxSpending.toStringAsFixed(2)}).');
+    }
+
+    // 3. Saving Insight
+    final income = getTotalIncome(transactions);
+    final expenses = getTotalExpenses(transactions);
+    if (income > 0) {
+      final savingRate = ((income - expenses) / income) * 100;
+      if (savingRate > 20) {
+        insights.add('Excellent! You are saving ${savingRate.toStringAsFixed(1)}% of your income.');
+      } else if (savingRate > 0) {
+        insights.add('You are saving ${savingRate.toStringAsFixed(1)}% of your income. Try to reach 20%!');
+      } else {
+        insights.add('Watch out! You are spending more than you earn.');
+      }
+    }
+
+    if (insights.isEmpty) {
+      insights.add('Not enough data to generate insights yet.');
+    }
+
+    return insights;
+  }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../data/datasources/mock_account_data_source.dart';
+import '../../data/datasources/remote_account_data_source.dart';
 import '../../domain/services/location_service.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import '../../core/utils/geo_utils.dart';
@@ -8,7 +8,7 @@ import 'auth_event.dart';
 import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final MockAccountDataSourceImpl dataSource;
+  final RemoteAccountDataSourceImpl dataSource;
   final LocationService locationService;
   final LogoutUseCase logoutUseCase;
   static const String _authKey = 'is_logged_in';

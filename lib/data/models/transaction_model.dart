@@ -7,6 +7,9 @@ class TransactionModel extends TransactionEntity {
     required super.date,
     required super.description,
     required super.isCredit,
+    super.status = 'Completed',
+    super.notes,
+    super.category = 'General',
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
@@ -16,6 +19,9 @@ class TransactionModel extends TransactionEntity {
       date: DateTime.parse(json['date']),
       description: json['description'],
       isCredit: json['isCredit'],
+      status: json['status'] ?? 'Completed',
+      notes: json['notes'],
+      category: json['category'] ?? 'General',
     );
   }
 
@@ -26,6 +32,9 @@ class TransactionModel extends TransactionEntity {
       'date': date.toIso8601String(),
       'description': description,
       'isCredit': isCredit,
+      'status': status,
+      'notes': notes,
+      'category': category,
     };
   }
 }

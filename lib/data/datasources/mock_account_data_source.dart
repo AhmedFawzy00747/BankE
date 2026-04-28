@@ -4,43 +4,43 @@ import '../models/account_model.dart';
 import '../models/transaction_model.dart';
 import '../models/admin_user_model.dart';
 import '../models/loan_model.dart';
-
-abstract class AccountDataSource {
-  Future<void> init();
-  Future<AccountModel> fetchAccountDetails(String accountId);
-  Future<List<TransactionModel>> fetchTransactions(String accountId);
-  Future<void> performTransfer(String senderId, String recipient, double amount, String notes);
-  Future<void> payBill(String senderId, String billerId, String consumerId, double amount);
-  void registerUser(String name, String email, String phone);
-  
-  // Admin methods
-  Future<List<AdminUserModel>> fetchAllUsers();
-  Future<void> blockUser(String userId);
-  Future<void> unblockUser(String userId);
-  Future<void> adjustBalance(String userId, double amount);
-  Future<List<Map<String, dynamic>>> fetchBillers();
-
-  // Loan methods
-  Future<void> submitLoanRequest(String userId, String userName, double amount, String purpose, int duration, String pdfName);
-  Future<List<LoanModel>> fetchAllLoans();
-  Future<void> updateLoanStatus(String loanId, LoanStatus status);
-  void reset();
-}
+import 'account_data_source.dart';
 
 class MockAccountDataSourceImpl implements AccountDataSource {
-  static const String _balanceKey = 'wallet_balance';
+  static const String _balanceKey = 'wallet_balances';
   static const String _transactionsKey = 'wallet_transactions';
 
-  static double _balance = 1450.75;
+  static Map<String, double> _balances = {
+    'acc_checking': 1450.75,
+    'acc_savings': 8500.00,
+  };
   static String? _registeredName;
   static String? _registeredEmail;
   static String? _registeredPhone;
   static String? _registeredId;
 
   static final List<AdminUserModel> _adminUsers = [
-    const AdminUserModel(id: 'acc_123', name: 'John Doe', email: 'john@example.com', phone: '+1234567890', balance: 1450.75, isBlocked: false),
-    const AdminUserModel(id: 'acc_456', name: 'Alice Smith', email: 'alice@example.com', phone: '+1987654321', balance: 8500.00, isBlocked: false),
-    const AdminUserModel(id: 'acc_789', name: 'Bob Johnson', email: 'bob@example.com', phone: '+1555666777', balance: 320.50, isBlocked: true),
+    const AdminUserModel(
+        id: 'acc_123',
+        name: 'John Doe',
+        email: 'john@example.com',
+        phone: '+1234567890',
+        balance: 1450.75,
+        isBlocked: false),
+    const AdminUserModel(
+        id: 'acc_456',
+        name: 'Alice Smith',
+        email: 'alice@example.com',
+        phone: '+1987654321',
+        balance: 8500.00,
+        isBlocked: false),
+    const AdminUserModel(
+        id: 'acc_789',
+        name: 'Bob Johnson',
+        email: 'bob@example.com',
+        phone: '+1555666777',
+        balance: 320.50,
+        isBlocked: true),
   ];
 
   static List<TransactionModel> _transactions = [
@@ -69,16 +69,27 @@ class MockAccountDataSourceImpl implements AccountDataSource {
   ];
 
   static final List<LoanModel> _loans = [
-    LoanModel(id: 'loan_01', userId: 'acc_789', userName: 'Bob Johnson', amount: 5000, purpose: 'Home Renovation', durationMonths: 12, pdfFileName: 'Bob_documents.pdf'),
+    const LoanModel(
+        id: 'loan_01',
+        userId: 'acc_789',
+        userName: 'Bob Johnson',
+        amount: 5000,
+        purpose: 'Home Renovation',
+        durationMonths: 12,
+        pdfFileName: 'Bob_documents.pdf',
+        pdfFilePath: ''),
   ];
 
   @override
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    
-    // Load balance
+
+    // Load balances
     if (prefs.containsKey(_balanceKey)) {
-      _balance = prefs.getDouble(_balanceKey) ?? _balance;
+      final String? balJson = prefs.getString(_balanceKey);
+      if (balJson != null) {
+        _balances = Map<String, double>.from(json.decode(balJson));
+      }
     }
 
     // Load transactions
@@ -86,32 +97,59 @@ class MockAccountDataSourceImpl implements AccountDataSource {
       final String? txJson = prefs.getString(_transactionsKey);
       if (txJson != null) {
         final List<dynamic> decoded = json.decode(txJson);
-        _transactions = decoded.map((item) => TransactionModel.fromJson(item)).toList();
+        _transactions =
+            decoded.map((item) => TransactionModel.fromJson(item)).toList();
       }
     }
   }
 
   Future<void> _saveToDisk() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(_balanceKey, _balance);
-    
-    final String encoded = json.encode(_transactions.map((tx) => tx.toJson()).toList());
+    await prefs.setString(_balanceKey, json.encode(_balances));
+
+    final String encoded =
+        json.encode(_transactions.map((tx) => tx.toJson()).toList());
     await prefs.setString(_transactionsKey, encoded);
   }
 
   @override
   Future<AccountModel> fetchAccountDetails(String accountId) async {
     await Future.delayed(const Duration(milliseconds: 300));
-    
+
     String name = _registeredName ?? 'John Doe';
-    if (accountId == 'acc_456') name = 'Alice Smith';
-    if (accountId == 'acc_789') name = 'Bob Johnson';
-    
+    double balance = _balances[accountId] ?? 0.0;
+    String type = accountId == 'acc_savings' ? 'Savings' : 'Checking';
+    String number = accountId == 'acc_savings' ? '**** 5678' : '**** 1234';
+
     return AccountModel(
       id: accountId,
       accountHolderName: name,
-      balance: _balance,
+      balance: balance,
+      accountType: type,
+      accountNumber: number,
     );
+  }
+
+  @override
+  Future<List<AccountModel>> fetchUserAccounts(String userId) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    String name = _registeredName ?? 'John Doe';
+    return [
+      AccountModel(
+        id: 'acc_checking',
+        accountHolderName: name,
+        balance: _balances['acc_checking'] ?? 0.0,
+        accountType: 'Checking',
+        accountNumber: '**** 1234',
+      ),
+      AccountModel(
+        id: 'acc_savings',
+        accountHolderName: name,
+        balance: _balances['acc_savings'] ?? 0.0,
+        accountType: 'Savings',
+        accountNumber: '**** 5678',
+      ),
+    ];
   }
 
   @override
@@ -120,16 +158,15 @@ class MockAccountDataSourceImpl implements AccountDataSource {
     _registeredEmail = email;
     _registeredPhone = phone;
     _registeredId = 'acc_${DateTime.now().millisecondsSinceEpoch}';
-    
+
     // Add to admin list
     _adminUsers.add(AdminUserModel(
-      id: _registeredId!, 
-      name: name, 
-      email: email, 
-      phone: phone, 
-      balance: _balance, 
-      isBlocked: false
-    ));
+        id: _registeredId!,
+        name: name,
+        email: email,
+        phone: phone,
+        balance: _balances['acc_checking'] ?? 0.0,
+        isBlocked: false));
   }
 
   @override
@@ -161,9 +198,10 @@ class MockAccountDataSourceImpl implements AccountDataSource {
     await Future.delayed(const Duration(milliseconds: 300));
     final index = _adminUsers.indexWhere((u) => u.id == userId);
     if (index != -1) {
-      _adminUsers[index] = _adminUsers[index].copyWith(balance: _adminUsers[index].balance + amount);
+      _adminUsers[index] = _adminUsers[index]
+          .copyWith(balance: _adminUsers[index].balance + amount);
       if (userId == 'acc_123' || userId == _registeredId) {
-        _balance += amount; 
+        _balances['acc_checking'] = (_balances['acc_checking'] ?? 0.0) + amount;
         await _saveToDisk();
       }
     }
@@ -176,14 +214,21 @@ class MockAccountDataSourceImpl implements AccountDataSource {
   }
 
   @override
-  Future<void> performTransfer(String senderId, String recipient, double amount, String notes) async {
+  Future<void> performTransfer(
+      String senderId, String recipient, double amount, String notes) async {
     await Future.delayed(const Duration(seconds: 1));
-    
-    if (amount > _balance) {
-      throw Exception('Insufficient balance');
+
+    double currentBalance = _balances[senderId] ?? 0.0;
+    if (amount > currentBalance) {
+      throw Exception('Insufficient balance in $senderId');
     }
 
-    _balance -= amount;
+    _balances[senderId] = currentBalance - amount;
+
+    // If transferring to own savings
+    if (_balances.containsKey(recipient)) {
+      _balances[recipient] = (_balances[recipient] ?? 0.0) + amount;
+    }
     _transactions.add(TransactionModel(
       id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
       amount: amount,
@@ -196,14 +241,16 @@ class MockAccountDataSourceImpl implements AccountDataSource {
   }
 
   @override
-  Future<void> payBill(String senderId, String billerId, String consumerId, double amount) async {
+  Future<void> payBill(String senderId, String billerId, String consumerId,
+      double amount) async {
     await Future.delayed(const Duration(seconds: 1));
 
-    if (amount > _balance) {
+    double currentBalance = _balances[senderId] ?? 0.0;
+    if (amount > currentBalance) {
       throw Exception('Insufficient balance for this payment');
     }
 
-    _balance -= amount;
+    _balances[senderId] = currentBalance - amount;
     _transactions.add(TransactionModel(
       id: 'bill_${DateTime.now().millisecondsSinceEpoch}',
       amount: amount,
@@ -219,20 +266,69 @@ class MockAccountDataSourceImpl implements AccountDataSource {
   Future<List<Map<String, dynamic>>> fetchBillers() async {
     await Future.delayed(const Duration(milliseconds: 300));
     return [
-      {'id': 'b1', 'name': 'City Electricity', 'category': 'Electricity', 'icon': 'bolt'},
-      {'id': 'b2', 'name': 'Regional Water Corp', 'category': 'Water', 'icon': 'water_drop'},
-      {'id': 'b3', 'name': 'Gas Services', 'category': 'Gas', 'icon': 'local_fire_department'},
-      {'id': 'b4', 'name': 'Fiber Net', 'category': 'Internet', 'icon': 'wifi'},
-      {'id': 'b5', 'name': 'Sky Cable', 'category': 'TV', 'icon': 'tv'},
-      {'id': 'b6', 'name': 'Mobile Connect', 'category': 'Mobile', 'icon': 'smartphone'},
-      {'id': 'b7', 'name': 'Global SIM', 'category': 'Mobile', 'icon': 'sim_card'},
+      {
+        'id': 'b1',
+        'name': 'City Electricity',
+        'category': 'Utilities',
+        'icon': 'bolt'
+      },
+      {
+        'id': 'b2',
+        'name': 'Regional Water Corp',
+        'category': 'Utilities',
+        'icon': 'water_drop'
+      },
+      {
+        'id': 'b3',
+        'name': 'Gas Services',
+        'category': 'Utilities',
+        'icon': 'local_fire_department'
+      },
+      {'id': 'b4', 'name': 'Fiber Net', 'category': 'Telecom', 'icon': 'wifi'},
+      {
+        'id': 'b5',
+        'name': 'Sky Cable',
+        'category': 'Entertainment',
+        'icon': 'tv'
+      },
+      {
+        'id': 'b6',
+        'name': 'Mobile Connect',
+        'category': 'Telecom',
+        'icon': 'smartphone'
+      },
+      {
+        'id': 'b7',
+        'name': 'Global SIM',
+        'category': 'Telecom',
+        'icon': 'sim_card'
+      },
+      {
+        'id': 'b8',
+        'name': 'Central University',
+        'category': 'Education',
+        'icon': 'school'
+      },
+      {
+        'id': 'b9',
+        'name': 'St. Mary\'s Hospital',
+        'category': 'Health',
+        'icon': 'medical_services'
+      },
+      {
+        'id': 'b10',
+        'name': 'Safe Insurance',
+        'category': 'Finance',
+        'icon': 'security'
+      },
     ];
   }
 
   @override
-  Future<void> submitLoanRequest(String userId, String userName, double amount, String purpose, int duration, String pdfName) async {
+  Future<LoanModel> submitLoanRequest(String userId, String userName, double amount,
+      String purpose, int duration, String pdfName, String pdfPath) async {
     await Future.delayed(const Duration(seconds: 1));
-    _loans.add(LoanModel(
+    final newLoan = LoanModel(
       id: 'loan_${DateTime.now().millisecondsSinceEpoch}',
       userId: userId,
       userName: userName,
@@ -240,7 +336,10 @@ class MockAccountDataSourceImpl implements AccountDataSource {
       purpose: purpose,
       durationMonths: duration,
       pdfFileName: pdfName,
-    ));
+      pdfFilePath: pdfPath,
+    );
+    _loans.add(newLoan);
+    return newLoan;
   }
 
   @override
@@ -255,7 +354,7 @@ class MockAccountDataSourceImpl implements AccountDataSource {
     final index = _loans.indexWhere((L) => L.id == loanId);
     if (index != -1) {
       _loans[index] = _loans[index].copyWith(status: status);
-      
+
       // If approved, mock adding balance to that user realistically
       if (status == LoanStatus.approved) {
         final loan = _loans[index];
@@ -266,7 +365,10 @@ class MockAccountDataSourceImpl implements AccountDataSource {
 
   @override
   void reset() {
-    _balance = 1450.75;
+    _balances = {
+      'acc_checking': 1450.75,
+      'acc_savings': 8500.00,
+    };
     _registeredName = null;
     _registeredEmail = null;
     _registeredPhone = null;
@@ -294,5 +396,44 @@ class MockAccountDataSourceImpl implements AccountDataSource {
         isCredit: false,
       ),
     ];
+  }
+
+  @override
+  Future<void> withdraw(String accountId, double amount) async {
+    await Future.delayed(const Duration(seconds: 1));
+    final currentBalance = _balances[accountId] ?? 0.0;
+    if (currentBalance < amount) {
+      throw Exception('Insufficient funds');
+    }
+    _balances[accountId] = currentBalance - amount;
+
+    _transactions.insert(
+        0,
+        TransactionModel(
+          id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
+          amount: amount,
+          date: DateTime.now(),
+          description: 'ATM Withdrawal',
+          isCredit: false,
+        ));
+    await _saveToDisk();
+  }
+
+  @override
+  Future<void> deposit(String accountId, double amount) async {
+    await Future.delayed(const Duration(seconds: 1));
+    final currentBalance = _balances[accountId] ?? 0.0;
+    _balances[accountId] = currentBalance + amount;
+
+    _transactions.insert(
+        0,
+        TransactionModel(
+          id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
+          amount: amount,
+          date: DateTime.now(),
+          description: 'ATM Deposit',
+          isCredit: true,
+        ));
+    await _saveToDisk();
   }
 }

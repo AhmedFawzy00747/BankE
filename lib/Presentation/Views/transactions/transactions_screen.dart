@@ -101,6 +101,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             _filterChip('Income'),
             const SizedBox(width: 12),
             _filterChip('Expense'),
+            const SizedBox(width: 12),
+            _filterChip('Bills'),
           ],
         ),
       ),
@@ -144,6 +146,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             bool matchesType = true;
             if (_selectedFilter == 'Income' && !tx.isCredit) matchesType = false;
             if (_selectedFilter == 'Expense' && tx.isCredit) matchesType = false;
+            if (_selectedFilter == 'Bills' && !tx.description.toLowerCase().contains('bill')) matchesType = false;
 
             // Filter by Date Range
             bool matchesDate = true;

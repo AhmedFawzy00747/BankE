@@ -10,6 +10,7 @@ import '../auth/login_screen.dart';
 import '../../../../data/models/admin_user_model.dart';
 import '../../../../data/models/loan_model.dart';
 import 'package:intl/intl.dart';
+import 'loan_pdf_viewer_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -259,7 +260,26 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 );
               }
 
-              return const Center(child: Text('Unexpected State'));
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const SizedBox(height: 16),
+                    const Text('Unexpected State encountered in Admin Dashboard',
+                        style: TextStyle(color: Colors.white)),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () =>
+                          context.read<AdminBloc>().add(FetchAllUsersEvent()),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.tealAccent,
+                          foregroundColor: Colors.black),
+                      child: const Text('Refresh'),
+                    )
+                  ],
+                ),
+              );
             },
           ),
         ),
@@ -518,11 +538,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   style: const TextStyle(color: Colors.grey, fontSize: 12)),
               Text('Duration: ${loan.durationMonths} months',
                   style: const TextStyle(color: Colors.grey, fontSize: 12)),
-              Text('Document: ${loan.pdfFileName}',
-                  style: const TextStyle(
-                      color: Colors.lightBlueAccent,
-                      fontSize: 12,
-                      decoration: TextDecoration.underline)),
+              GestureDetector(
+                onTap: () {
+                  if (loan.pdfFilePath != null && loan.pdfFilePath!.isNotEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => LoanPdfViewerScreen(
+                          filePath: loan.pdfFilePath!,
+                          userName: loan.userName,
+                        ),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('No document path available.'))
+                    );
+                  }
+                },
+                child: Text('View Document: ${loan.pdfFileName}',
+                    style: const TextStyle(
+                        color: Colors.lightBlueAccent,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        decoration: TextDecoration.underline)),
+              ),
               const SizedBox(height: 16),
               if (loan.status == LoanStatus.pending)
                 Row(

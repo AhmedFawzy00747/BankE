@@ -11,12 +11,13 @@ abstract class AccountState extends Equatable {
 class AccountInitial extends AccountState {}
 class AccountLoading extends AccountState {}
 class AccountLoaded extends AccountState {
-  final AccountEntity account;
+  final AccountEntity account; // the currently active account
+  final List<AccountEntity> allAccounts;
 
-  const AccountLoaded(this.account);
+  const AccountLoaded(this.account, {this.allAccounts = const []});
 
   @override
-  List<Object?> get props => [account];
+  List<Object?> get props => [account, allAccounts];
 }
 class AccountError extends AccountState {
   final String message;

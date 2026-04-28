@@ -6,11 +6,14 @@ class MessageEntity extends Equatable {
   final bool isUser;
   final DateTime timestamp;
 
+  final String? attachmentPath;
+
   const MessageEntity({
     required this.id,
     required this.text,
     required this.isUser,
     required this.timestamp,
+    this.attachmentPath,
   });
 
   @override

@@ -33,6 +33,24 @@ class MockCardRepository implements CardRepository {
   Future<List<CardEntity>> getCards(String accountId) async {
     return cards;
   }
+
+  @override
+  Future<void> changeCardPin(String cardId, String newPin) {
+    // TODO: implement changeCardPin
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> generateVirtualCard(String accountId, String cardHolderName) {
+    // TODO: implement generateVirtualCard
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> updateCardLimit(String cardId, double newLimit) {
+    // TODO: implement updateCardLimit
+    throw UnimplementedError();
+  }
 }
 
 void main() {

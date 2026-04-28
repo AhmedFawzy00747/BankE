@@ -5,6 +5,8 @@ class AccountModel extends AccountEntity {
     required super.id,
     required super.accountHolderName,
     required super.balance,
+    super.accountType = 'Checking',
+    super.accountNumber = '**** 0000',
   });
 
   factory AccountModel.fromJson(Map<String, dynamic> json) {
@@ -12,6 +14,8 @@ class AccountModel extends AccountEntity {
       id: json['id'],
       accountHolderName: json['accountHolderName'],
       balance: (json['balance'] as num).toDouble(),
+      accountType: json['accountType'] ?? 'Checking',
+      accountNumber: json['accountNumber'] ?? '**** 0000',
     );
   }
 
@@ -20,6 +24,8 @@ class AccountModel extends AccountEntity {
       'id': id,
       'accountHolderName': accountHolderName,
       'balance': balance,
+      'accountType': accountType,
+      'accountNumber': accountNumber,
     };
   }
 }

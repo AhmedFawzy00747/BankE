@@ -13,6 +13,7 @@ class CardRepositoryImpl implements CardRepository {
       isFrozen: false,
       isVirtual: false,
       cardType: 'Debit',
+      spendLimit: 2500.0,
     ),
     CardEntity(
       id: 'card_2',
@@ -23,6 +24,7 @@ class CardRepositoryImpl implements CardRepository {
       isFrozen: true,
       isVirtual: true,
       cardType: 'Credit',
+      spendLimit: 5000.0,
     ),
   ];
 
@@ -51,5 +53,37 @@ class CardRepositoryImpl implements CardRepository {
   Future<void> deleteCard(String cardId) async {
     await Future.delayed(const Duration(milliseconds: 500));
     _cards.removeWhere((c) => c.id == cardId);
+  }
+
+  @override
+  Future<void> updateCardLimit(String cardId, double newLimit) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    final index = _cards.indexWhere((c) => c.id == cardId);
+    if (index != -1) {
+      _cards[index] = _cards[index].copyWith(spendLimit: newLimit);
+    }
+  }
+
+  @override
+  Future<void> changeCardPin(String cardId, String newPin) async {
+    await Future.delayed(const Duration(seconds: 1));
+    // In a real app, this would update the PIN securely
+  }
+
+  @override
+  Future<void> generateVirtualCard(String accountId, String cardHolderName) async {
+    await Future.delayed(const Duration(seconds: 2));
+    final newCard = CardEntity(
+      id: 'card_v_${DateTime.now().millisecondsSinceEpoch}',
+      cardNumber: '4242${(100000000000 + DateTime.now().millisecondsSinceEpoch % 1000000000000).toString()}',
+      cardHolderName: cardHolderName,
+      expiryDate: '08/29',
+      cvv: '999',
+      isFrozen: false,
+      isVirtual: true,
+      cardType: 'Debit',
+      spendLimit: 500.0,
+    );
+    _cards.add(newCard);
   }
 }

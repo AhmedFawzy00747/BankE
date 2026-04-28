@@ -1,3 +1,5 @@
+import 'package:contr_project/data/datasources/account_data_source.dart';
+
 import '../../domain/entities/account.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/entities/biller.dart';
@@ -12,6 +14,11 @@ class AccountRepositoryImpl implements AccountRepository {
   @override
   Future<AccountEntity> getAccountDetails(String accountId) async {
     return await dataSource.fetchAccountDetails(accountId);
+  }
+
+  @override
+  Future<List<AccountEntity>> getUserAccounts(String userId) async {
+    return await dataSource.fetchUserAccounts(userId);
   }
 
   @override
@@ -42,11 +49,23 @@ class AccountRepositoryImpl implements AccountRepository {
   @override
   Future<List<BillerEntity>> getBillers() async {
     final rawBillers = await dataSource.fetchBillers();
-    return rawBillers.map((map) => BillerEntity(
-      id: map['id'],
-      name: map['name'],
-      category: map['category'],
-      icon: map['icon'],
-    )).toList();
+    return rawBillers
+        .map((map) => BillerEntity(
+              id: map['id'],
+              name: map['name'],
+              category: map['category'],
+              icon: map['icon'],
+            ))
+        .toList();
+  }
+
+  @override
+  Future<void> withdraw(String accountId, double amount) async {
+    await dataSource.withdraw(accountId, amount);
+  }
+
+  @override
+  Future<void> deposit(String accountId, double amount) async {
+    await dataSource.deposit(accountId, amount);
   }
 }

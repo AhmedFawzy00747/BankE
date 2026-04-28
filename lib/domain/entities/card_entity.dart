@@ -7,6 +7,7 @@ class CardEntity {
   final bool isFrozen;
   final bool isVirtual;
   final String cardType; // "Credit" or "Debit"
+  final double spendLimit;
 
   const CardEntity({
     required this.id,
@@ -17,6 +18,7 @@ class CardEntity {
     required this.isFrozen,
     required this.isVirtual,
     required this.cardType,
+    this.spendLimit = 1000.0,
   });
 
   CardEntity copyWith({
@@ -28,6 +30,7 @@ class CardEntity {
     bool? isFrozen,
     bool? isVirtual,
     String? cardType,
+    double? spendLimit,
   }) {
     return CardEntity(
       id: id ?? this.id,
@@ -38,6 +41,7 @@ class CardEntity {
       isFrozen: isFrozen ?? this.isFrozen,
       isVirtual: isVirtual ?? this.isVirtual,
       cardType: cardType ?? this.cardType,
+      spendLimit: spendLimit ?? this.spendLimit,
     );
   }
 }

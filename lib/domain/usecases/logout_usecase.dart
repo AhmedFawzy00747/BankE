@@ -1,9 +1,10 @@
+import 'package:contr_project/data/datasources/account_data_source.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/datasources/mock_account_data_source.dart';
 
 class LogoutUseCase {
   final AccountDataSource dataSource;
-  
+
   LogoutUseCase(this.dataSource);
 
   static const String _authKey = 'is_logged_in';

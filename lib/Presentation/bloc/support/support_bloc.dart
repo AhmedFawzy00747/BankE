@@ -13,9 +13,17 @@ abstract class SupportEvent extends Equatable {
 
 class SendMessageEvent extends SupportEvent {
   final String text;
-  const SendMessageEvent(this.text);
+  final String? attachmentPath;
+  const SendMessageEvent(this.text, {this.attachmentPath});
   @override
-  List<Object?> get props => [text];
+  List<Object?> get props => [text, attachmentPath];
+}
+
+class SelectQuickActionIconEvent extends SupportEvent {
+  final String action;
+  const SelectQuickActionIconEvent(this.action);
+  @override
+  List<Object?> get props => [action];
 }
 
 // State
@@ -49,8 +57,9 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
 
   SupportBloc({required this.sendMessageUseCase}) : super(const SupportState()) {
     on<SendMessageEvent>(_onSendMessage);
+    on<SelectQuickActionIconEvent>(_onQuickAction);
 
-    // Initial greeting!
+    // Initial greeting
     emit(state.copyWith(
       messages: [
         MessageEntity(
@@ -69,6 +78,7 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
       text: event.text,
       isUser: true,
       timestamp: DateTime.now(),
+      attachmentPath: event.attachmentPath,
     );
 
     emit(state.copyWith(
@@ -77,13 +87,14 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
     ));
 
     try {
-      final botMessage = await sendMessageUseCase.execute(event.text);
+      // Simulate smarter AI response logic based on keywords
+      final botResponse = await _getSmartResponse(event.text);
+      
       emit(state.copyWith(
-        messages: List.from(state.messages)..add(botMessage),
+        messages: List.from(state.messages)..add(botResponse),
         isBotTyping: false,
       ));
     } catch (_) {
-      // In case of error (never happens in mock, but good practice)
        emit(state.copyWith(
         messages: List.from(state.messages)..add(
           MessageEntity(
@@ -96,5 +107,36 @@ class SupportBloc extends Bloc<SupportEvent, SupportState> {
         isBotTyping: false,
       ));
     }
+  }
+
+  Future<void> _onQuickAction(SelectQuickActionIconEvent event, Emitter<SupportState> emit) async {
+    add(SendMessageEvent(event.action));
+  }
+
+  Future<MessageEntity> _getSmartResponse(String text) async {
+    // Artificial delay to feel natural
+    await Future.delayed(const Duration(seconds: 2));
+    
+    String responseText = "I'm sorry, I didn't quite understand that. Could you please rephrase?";
+    final input = text.toLowerCase();
+
+    if (input.contains('loan')) {
+      responseText = "You can apply for a loan in the 'Loans' section on the dashboard. Would you like me to explain the requirements?";
+    } else if (input.contains('card')) {
+      responseText = "Your card management is available under the 'Cards' tab. You can freeze, unfreeze, or change your PIN there.";
+    } else if (input.contains('transfer')) {
+      responseText = "To transfer money, use the 'Transfer' button on the main screen. You can send to existing beneficiaries or add new ones.";
+    } else if (input.contains('points') || input.contains('rewards')) {
+      responseText = "You earn loyalty points for every transaction. Check your 'Rewards' section to redeem them for vouchers!";
+    } else if (input.contains('limit')) {
+      responseText = "You can adjust your daily transfer limits in 'Settings' -> 'Advanced Settings'.";
+    }
+
+    return MessageEntity(
+      id: _uuid.v4(),
+      text: responseText,
+      isUser: false,
+      timestamp: DateTime.now(),
+    );
   }
 }

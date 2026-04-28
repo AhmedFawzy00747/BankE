@@ -12,6 +12,7 @@ import '../../bloc/otp/otp_state.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../../bloc/otp/otp_bloc.dart';
 import '../admin/admin_login_screen.dart';
+import '../../../core/services/biometric_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,11 +25,42 @@ class _LoginScreenState extends State<LoginScreen> {
   final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPhone = false;
+  final _biometricService = BiometricService();
+  bool _canCheckBiometrics = false;
 
   @override
   void initState() {
     super.initState();
     _identifierController.addListener(_detectInputType);
+    _checkBiometrics();
+  }
+
+  Future<void> _checkBiometrics() async {
+    final canCheck = await _biometricService.isBiometricAvailable();
+    if (mounted) {
+      setState(() {
+        _canCheckBiometrics = canCheck;
+      });
+    }
+  }
+
+  Future<void> _handleBiometricLogin() async {
+    final authenticated = await _biometricService.authenticate();
+    if (authenticated && mounted) {
+      // In a real app, you would retrieve stored credentials securely.
+      // For this simulation, we use the demo account.
+      context.read<AuthBloc>().add(const LoginSubmittedEvent(
+            identity: 'demo@bank.com',
+            password: 'password',
+            isPhone: false,
+          ));
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Authentication failed or cancelled.'))
+        );
+      }
+    }
   }
 
   void _detectInputType() {
@@ -219,6 +251,42 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               
+              if (_canCheckBiometrics) ...[
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: _handleBiometricLogin,
+                  icon: const Icon(Icons.fingerprint_rounded),
+                  label: const Text('Biometric Login', style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(56),
+                    side: BorderSide(color: primaryColor.withOpacity(0.5)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    foregroundColor: primaryColor,
+                  ),
+                ),
+              ],
+              
+              const SizedBox(height: 32),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.withOpacity(0.1)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: primaryColor, size: 20),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Demo: demo@bank.com / password',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

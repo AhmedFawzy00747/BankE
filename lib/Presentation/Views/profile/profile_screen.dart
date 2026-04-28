@@ -12,6 +12,9 @@ import '../../bloc/language/language_bloc.dart';
 import '../../bloc/theme/theme_bloc.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../support/support_screen.dart';
+import 'security_center_screen.dart';
+import 'regional_settings_screen.dart';
+import 'advanced_settings_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -118,31 +121,35 @@ class ProfileScreen extends StatelessWidget {
             icon: Icons.security,
             title: 'Security',
             subtitle: 'Password, FaceID, Biometrics',
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SecurityCenterScreen()),
+              );
+            },
           ),
           _buildOptionTile(
             context,
             icon: Icons.language,
-            title: AppLocalizations.of(context)!.language,
-            subtitle: 'English / العربية',
+            title: 'Regional Settings',
+            subtitle: 'Language & Default Currency',
             onTap: () {
-              final currentLanguage = context.read<LanguageBloc>().state.locale.languageCode;
-              if (currentLanguage == 'ar') {
-                context.read<LanguageBloc>().add(ChangeLanguageEvent('en'));
-              } else {
-                context.read<LanguageBloc>().add(ChangeLanguageEvent('ar'));
-              }
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RegionalSettingsScreen()),
+              );
             },
           ),
           _buildOptionTile(
             context,
             icon: Icons.settings,
             title: AppLocalizations.of(context)!.settings,
-            subtitle: 'Dark / Light Theme (Tap to toggle)',
+            subtitle: 'Theme, Font Size, Privacy, Limits',
             onTap: () {
-              final currentTheme = context.read<ThemeBloc>().state.themeMode;
-              final nextTheme = currentTheme == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
-              context.read<ThemeBloc>().add(ChangeThemeEvent(nextTheme));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AdvancedSettingsScreen()),
+              );
             },
           ),
           _buildOptionTile(
@@ -155,6 +162,24 @@ class ProfileScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(builder: (context) => const SupportScreen()),
               );
+            },
+          ),
+          _buildOptionTile(
+            context,
+            icon: Icons.share_outlined,
+            title: 'Share App',
+            subtitle: 'Invite friends and earn points',
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sharing Contro Bank...')));
+            },
+          ),
+          _buildOptionTile(
+            context,
+            icon: Icons.star_outline,
+            title: 'Rate Us',
+            subtitle: 'Tell us what you think',
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening App Store...')));
             },
           ),
           const SizedBox(height: 16),

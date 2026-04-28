@@ -6,12 +6,14 @@ class TransferSuccessScreen extends StatelessWidget {
   final String amount;
   final String recipient;
   final String referenceNumber;
+  final bool isBill;
 
   const TransferSuccessScreen({
     super.key,
     required this.amount,
     required this.recipient,
     this.referenceNumber = 'TXN778234910',
+    this.isBill = false,
   });
 
   @override
@@ -31,7 +33,7 @@ class TransferSuccessScreen extends StatelessWidget {
               _buildSuccessIcon(context),
               const SizedBox(height: 32),
               Text(
-                'Transfer Successful!',
+                isBill ? 'Payment Successful!' : 'Transfer Successful!',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -40,7 +42,9 @@ class TransferSuccessScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Your money has been sent successfully.',
+                isBill 
+                  ? 'Your bill has been paid successfully.'
+                  : 'Your money has been sent successfully.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -103,7 +107,7 @@ class TransferSuccessScreen extends StatelessWidget {
             padding: EdgeInsets.symmetric(vertical: 20),
             child: Divider(thickness: 1),
           ),
-          _buildReceiptRow(context, 'Recipient Account', recipient),
+          _buildReceiptRow(context, isBill ? 'Biller' : 'Recipient Account', recipient),
           const SizedBox(height: 16),
           _buildReceiptRow(context, 'Transaction ID', referenceNumber),
           const SizedBox(height: 16),
@@ -137,19 +141,31 @@ class TransferSuccessScreen extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        TextButton.icon(
-          onPressed: () {
-            HapticFeedback.lightImpact();
-          },
-          icon: const Icon(Icons.share_outlined, size: 20),
-          label: const Text(
-            'Share Receipt',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          style: TextButton.styleFrom(
-            foregroundColor: Theme.of(context).primaryColor,
-          ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton.icon(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+              },
+              icon: const Icon(Icons.share_outlined, size: 20),
+              label: const Text('Share', style: TextStyle(fontWeight: FontWeight.bold)),
+              style: TextButton.styleFrom(foregroundColor: Theme.of(context).primaryColor),
+            ),
+            const SizedBox(width: 24),
+            TextButton.icon(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Receipt downloaded as PDF'), behavior: SnackBarBehavior.floating)
+                );
+              },
+              icon: const Icon(Icons.download_outlined, size: 20),
+              label: const Text('Download', style: TextStyle(fontWeight: FontWeight.bold)),
+              style: TextButton.styleFrom(foregroundColor: Theme.of(context).primaryColor),
+            ),
+          ],
         ),
       ],
     );

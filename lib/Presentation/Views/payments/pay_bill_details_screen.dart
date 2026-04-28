@@ -21,12 +21,41 @@ class PayBillDetailsScreen extends StatefulWidget {
 class _PayBillDetailsScreenState extends State<PayBillDetailsScreen> {
   final _consumerIdController = TextEditingController();
   final _amountController = TextEditingController();
+  bool _isValidating = false;
+  bool _isBillFetched = false;
+  double? _suggestedAmount;
 
   @override
   void dispose() {
     _consumerIdController.dispose();
     _amountController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchBillDetails() async {
+    if (_consumerIdController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a Consumer ID'))
+      );
+      return;
+    }
+
+    setState(() {
+      _isValidating = true;
+    });
+
+    // Simulate API call to fetch bill details
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (!mounted) return;
+
+    setState(() {
+      _isValidating = false;
+      _isBillFetched = true;
+      // Mocked suggested amount based on ID length
+      _suggestedAmount = (_consumerIdController.text.length * 15.5);
+      _amountController.text = _suggestedAmount!.toStringAsFixed(2);
+    });
   }
 
   @override
@@ -57,7 +86,7 @@ class _PayBillDetailsScreenState extends State<PayBillDetailsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Payment Details',
+                    'Bill Information',
                     style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -70,56 +99,88 @@ class _PayBillDetailsScreenState extends State<PayBillDetailsScreen> {
                     hint: 'Enter ID number',
                     controller: _consumerIdController,
                     icon: Icons.account_circle_outlined,
+                    onChanged: (_) {
+                      if (_isBillFetched) {
+                        setState(() {
+                          _isBillFetched = false;
+                        });
+                      }
+                    },
                   ),
-                  const SizedBox(height: 20),
-                  _buildPremiumTextField(
-                    context,
-                    label: 'Amount',
-                    hint: '0.00',
-                    controller: _amountController,
-                    icon: Icons.attach_money_rounded,
-                    isNumber: true,
-                  ),
-                  const SizedBox(height: 48),
-                  SizedBox(
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        HapticFeedback.mediumImpact();
-                        if (_consumerIdController.text.isEmpty ||
-                            _amountController.text.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Please fill all fields')));
-                          return;
-                        }
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TransferReviewScreen(
-                              account: widget.biller.name,
-                              amount: _amountController.text,
-                              notes: 'Bill ID: ${_consumerIdController.text}',
-                              billerId: widget.biller.id,
-                              consumerId: _consumerIdController.text,
-                            ),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        elevation: 4,
-                        shadowColor: primaryColor.withOpacity(0.3),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
+                  const SizedBox(height: 24),
+                  if (!_isBillFetched)
+                    SizedBox(
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _isValidating ? null : _fetchBillDetails,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor.withOpacity(0.1),
+                          foregroundColor: primaryColor,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(color: primaryColor.withOpacity(0.2))),
+                        ),
+                        child: _isValidating
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Text('Fetch Bill Details',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
-                      child: const Text('Review Payment',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold)),
                     ),
-                  ),
+                  if (_isBillFetched) ...[
+                    _buildBillSummaryCard(context),
+                    const SizedBox(height: 24),
+                    _buildPremiumTextField(
+                      context,
+                      label: 'Payment Amount',
+                      hint: '0.00',
+                      controller: _amountController,
+                      icon: Icons.attach_money_rounded,
+                      isNumber: true,
+                    ),
+                    const SizedBox(height: 48),
+                    SizedBox(
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          HapticFeedback.mediumImpact();
+                          if (_amountController.text.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Please enter an amount')));
+                            return;
+                          }
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TransferReviewScreen(
+                                account: widget.biller.name,
+                                amount: _amountController.text,
+                                notes: 'Bill ID: ${_consumerIdController.text}',
+                                billerId: widget.biller.id,
+                                consumerId: _consumerIdController.text,
+                              ),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          elevation: 4,
+                          shadowColor: primaryColor.withOpacity(0.3),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: const Text('Review Payment',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   const Text(
                     'Note: A convenience fee might apply depending on the service provider.',
@@ -131,6 +192,41 @@ class _PayBillDetailsScreenState extends State<PayBillDetailsScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildBillSummaryCard(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.green.withOpacity(0.1)),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            backgroundColor: Colors.green,
+            radius: 20,
+            child: Icon(Icons.check, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Bill Found',
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                Text('Customer: John Doe (Mock)',
+                    style: TextStyle(fontSize: 12, color: theme.textTheme.bodyMedium?.color)),
+              ],
+            ),
+          ),
+          Text('\$${_suggestedAmount?.toStringAsFixed(2)}',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        ],
       ),
     );
   }
@@ -183,6 +279,7 @@ class _PayBillDetailsScreenState extends State<PayBillDetailsScreen> {
     required TextEditingController controller,
     required IconData icon,
     bool isNumber = false,
+    Function(String)? onChanged,
   }) {
     final theme = Theme.of(context);
     return Column(
@@ -201,6 +298,7 @@ class _PayBillDetailsScreenState extends State<PayBillDetailsScreen> {
           ),
           child: TextField(
             controller: controller,
+            onChanged: onChanged,
             keyboardType: isNumber
                 ? const TextInputType.numberWithOptions(decimal: true)
                 : TextInputType.text,
